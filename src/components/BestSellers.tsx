@@ -9,14 +9,14 @@ const PRODUCTS = [
 ];
 
 export const BestSellers = () => {
-  const { addToCart, navigate, theme } = useAppContext();
+  const { addToCart, navigate, theme, t } = useAppContext();
   const isDark = theme === 'dark';
 
   return (
     <section className={`px-4 py-8 max-w-md mx-auto border-y transition-colors duration-300 ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
       <div className="flex items-center justify-between mb-5">
-        <h2 className={`text-xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>Nos Best-Sellers</h2>
-        <button onClick={() => navigate('catalog')} className="text-sm font-bold text-amber-600 min-h-[48px] px-2 active:opacity-70">Voir tout</button>
+        <h2 className={`text-xl font-extrabold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('bestsellers.title')}</h2>
+        <button onClick={() => navigate('catalog', undefined, true)} className="text-sm font-bold text-amber-600 min-h-[48px] px-2 active:opacity-70">{t('bestsellers.view_all')}</button>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -31,9 +31,9 @@ export const BestSellers = () => {
               <button
                 onClick={() => addToCart(product.id, product.price)}
                 className={`w-full rounded-xl py-2 text-sm font-bold flex items-center justify-center gap-1 min-h-[44px] transition-colors ${isDark ? 'bg-amber-600 text-white active:bg-amber-700' : 'bg-gray-900 text-white active:bg-gray-800'}`}
-                aria-label={`Ajouter ${product.name} au panier`}
+                aria-label={`${t('bestsellers.add')} ${product.name} ${t('nav.cart')}`}
               >
-                <Plus size={18} /> Ajouter
+                <Plus size={18} /> {t('bestsellers.add')}
               </button>
             </div>
           </div>

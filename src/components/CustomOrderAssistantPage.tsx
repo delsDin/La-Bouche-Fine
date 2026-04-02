@@ -22,7 +22,7 @@ import { trackEvent } from '../lib/tracking';
 type Step = 'occasion' | 'size' | 'flavor' | 'design' | 'contact' | 'summary' | 'success';
 
 export const CustomOrderAssistantPage = () => {
-  const { navigate, theme } = useAppContext();
+  const { navigate, goBack, theme } = useAppContext();
   const isDark = theme === 'dark';
   const [currentStep, setCurrentStep] = useState<Step>('occasion');
   
@@ -56,7 +56,7 @@ export const CustomOrderAssistantPage = () => {
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1]);
     } else {
-      navigate('home');
+      goBack();
     }
   };
 
@@ -602,12 +602,12 @@ export const CustomOrderAssistantPage = () => {
                   <MessageSquare size={20} /> Message d'urgence WhatsApp
                 </button>
                 <button
-                  onClick={() => navigate('home')}
+                  onClick={() => goBack()}
                   className={`w-full font-bold py-4 rounded-2xl border-2 transition-all ${
                     isDark ? 'border-gray-700 text-gray-400' : 'border-gray-100 text-gray-500'
                   }`}
                 >
-                  Retour à l'accueil
+                  Retour
                 </button>
               </div>
             </motion.div>

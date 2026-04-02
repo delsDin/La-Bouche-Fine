@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { trackEvent } from './tracking';
+import { useTranslation } from './translations';
 
-type Page = 'home' | 'catalog' | 'product' | 'cart' | 'checkout' | 'order-confirmation' | 'order-tracking' | 'public-tracking' | 'courses' | 'signup' | 'dashboard' | 'login';
+type Page = 'accueil' | 'home' | 'catalog' | 'product' | 'cart' | 'checkout' | 'order-confirmation' | 'order-tracking' | 'public-tracking' | 'courses' | 'signup' | 'dashboard' | 'login' | 'course-player' | 'quiz' | 'reading' | 'offline-pack' | 'profile' | 'edit-profile' | 'change-phone' | 'change-password' | 'in-progress-courses' | 'subscription' | 'ai-tutor' | 'custom-order-assistant' | 'ai-agent' | 'legal' | 'not-found';
 
 export interface CartItem {
   productId: string;
@@ -16,19 +17,35 @@ interface AppContextType {
   updateQuantity: (productId: string, delta: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
+  user: {
+    name: string;
+    phone?: string;
+    subscription: 'free' | 'premium';
+    avatar?: string;
+  } | null;
+  login: (name: string, subscription: 'free' | 'premium', phone?: string) => void;
+  updateUser: (data: Partial<{ name: string; phone: string; avatar: string; subscription: 'free' | 'premium' }>) => void;
+  logout: () => void;
   dataSaver: boolean;
   setDataSaver: (val: boolean) => void;
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
   networkStatus: 'online' | 'offline' | 'slow';
+  language: string;
+  setLanguage: (lang: string) => void;
+  t: (key: string) => string;
   currentPage: Page;
   currentProductId: string | null;
   currentOrderId: string | null;
-  navigate: (page: Page, id?: string) => void;
+  currentCourseId: string | null;
+  navigate: (page: Page, id?: string, replace?: boolean) => void;
+  goBack: () => void;
   deliveryCity: string;
   setDeliveryCity: (city: string) => void;
   deliveryNeighborhood: string;
   setDeliveryNeighborhood: (neighborhood: string) => void;
+  consentAnalytics: boolean;
+  setConsentAnalytics: (val: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -37,12 +54,32 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [dataSaver, setDataSaver] = useState(false);
   const [theme, setThemeState] = useState<'dark' | 'light'>('light');
+  const [language, setLanguageState] = useState<string>('Français');
+  const { t } = useTranslation(language);
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'slow'>('online');
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, setCurrentPage] = useState<Page>('accueil');
   const [currentProductId, setCurrentProductId] = useState<string | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [currentCourseId, setCurrentCourseId] = useState<string | null>(null);
+  const [user, setUser] = useState<{ name: string; phone?: string; subscription: 'free' | 'premium'; avatar?: string } | null>(null);
   const [deliveryCity, setDeliveryCityState] = useState<string>('Cotonou');
   const [deliveryNeighborhood, setDeliveryNeighborhoodState] = useState<string>('Haie Vive');
+  const [consentAnalytics, setConsentAnalyticsState] = useState<boolean>(true);
+
+  const updatePageState = (page: Page, id?: string | null) => {
+    setCurrentPage(page);
+    if (page === 'product' && id) {
+      setCurrentProductId(id);
+    } else if (page === 'course-player' && id) {
+      setCurrentCourseId(id);
+    } else if ((page === 'order-confirmation' || page === 'order-tracking') && id) {
+      setCurrentOrderId(id);
+    } else {
+      if (page !== 'product') setCurrentProductId(null);
+      if (page !== 'course-player') setCurrentCourseId(null);
+      if (page !== 'order-confirmation' && page !== 'order-tracking') setCurrentOrderId(null);
+    }
+  };
 
   const setDeliveryCity = (city: string) => {
     setDeliveryCityState(city);
@@ -79,6 +116,21 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
+    // Initialize history state
+    if (!window.history.state) {
+      window.history.replaceState({ page: 'accueil' }, '', '');
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state) {
+        updatePageState(event.state.page, event.state.id);
+      } else {
+        updatePageState('accueil');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
     const savedDataSaver = localStorage.getItem('dataSaver');
     if (savedDataSaver) setDataSaver(savedDataSaver === 'true');
 
@@ -90,6 +142,21 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light' || savedTheme === 'dark') setThemeState(savedTheme);
+
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage) setLanguageState(savedLanguage);
+
+    const savedConsent = localStorage.getItem('user_consent_analytics');
+    if (savedConsent !== null) setConsentAnalyticsState(savedConsent === 'true');
+
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Erreur de parsing de l'utilisateur", e);
+      }
+    }
 
     // Gestion du statut réseau
     const updateStatus = () => {
@@ -115,6 +182,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       window.removeEventListener('online', updateStatus);
       window.removeEventListener('offline', updateStatus);
+      window.removeEventListener('popstate', handlePopState);
       if ((navigator as any).connection) {
         (navigator as any).connection.removeEventListener('change', updateStatus);
       }
@@ -139,6 +207,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const setTheme = (newTheme: 'dark' | 'light') => {
     setThemeState(newTheme);
     localStorage.setItem('theme', newTheme);
+  };
+
+  const setLanguage = (lang: string) => {
+    setLanguageState(lang);
+    localStorage.setItem('language', lang);
+    trackEvent('ChangeLanguage', { language: lang });
   };
 
   const addToCart = (productId: string, price: number) => {
@@ -192,24 +266,57 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem('dataSaver', val.toString());
   };
 
-  const handleNavigate = (page: Page, id?: string) => {
-    setCurrentPage(page);
-    if (page === 'product' && id) {
-      setCurrentProductId(id);
-    } else if ((page === 'order-confirmation' || page === 'order-tracking') && id) {
-      setCurrentOrderId(id);
+  const setConsentAnalytics = (val: boolean) => {
+    setConsentAnalyticsState(val);
+    localStorage.setItem('user_consent_analytics', val.toString());
+    trackEvent('Consent_Update', { analytics: val });
+  };
+
+  const login = (name: string, subscription: 'free' | 'premium', phone?: string) => {
+    const newUser = { name, subscription, phone };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
+  const updateUser = (data: Partial<{ name: string; phone: string; avatar: string; subscription: 'free' | 'premium' }>) => {
+    if (!user) return;
+    const newUser = { ...user, ...data };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+    trackEvent('UpdateProfile', data);
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    handleNavigate('accueil', undefined, true);
+  };
+
+  const handleNavigate = (page: Page, id?: string, replace = false) => {
+    const state = { page, id };
+    const url = (page === 'order-tracking' && id) ? `/suivi/${id}` : (page === 'public-tracking' ? '/suivi' : '');
+    if (replace) {
+      window.history.replaceState(state, '', url);
     } else {
-      if (page !== 'product') setCurrentProductId(null);
-      if (page !== 'order-confirmation' && page !== 'order-tracking') setCurrentOrderId(null);
+      window.history.pushState(state, '', url);
     }
+    updatePageState(page, id);
+  };
+
+  const goBack = () => {
+    window.history.back();
   };
 
   return (
     <AppContext.Provider value={{ 
       cartItems, cartCount, addToCart, updateQuantity, removeFromCart, clearCart, 
       dataSaver, setDataSaver: toggleDataSaver, theme, setTheme, networkStatus, 
-      currentPage, currentProductId, currentOrderId, navigate: handleNavigate,
-      deliveryCity, setDeliveryCity, deliveryNeighborhood, setDeliveryNeighborhood
+      language, setLanguage, t,
+      currentPage, currentProductId, currentOrderId, currentCourseId, navigate: handleNavigate,
+      goBack,
+      deliveryCity, setDeliveryCity, deliveryNeighborhood, setDeliveryNeighborhood,
+      consentAnalytics, setConsentAnalytics,
+      user, login, logout, updateUser
     }}>
       {children}
     </AppContext.Provider>

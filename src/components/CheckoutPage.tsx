@@ -10,7 +10,7 @@ import { LocationPickerModal } from './LocationPickerModal';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 
 export const CheckoutPage = () => {
-  const { cartItems, navigate, networkStatus, dataSaver, clearCart, deliveryCity, deliveryNeighborhood, setDeliveryCity, setDeliveryNeighborhood, theme } = useAppContext();
+  const { cartItems, navigate, goBack, networkStatus, dataSaver, clearCart, deliveryCity, deliveryNeighborhood, setDeliveryCity, setDeliveryNeighborhood, theme, t } = useAppContext();
   const isDark = theme === 'dark';
   
   // Form State
@@ -157,31 +157,31 @@ export const CheckoutPage = () => {
     trackEvent('Payment_Method_Selected', { Method: 'WhatsApp_Agent' });
     
     const orderId = createOrder('pending');
-    let message = `Bonjour Agent Vente, je souhaite finaliser ma commande #${orderId}.\n\n`;
-    message += `*Produits :*\n`;
+    let message = `${t('checkout.whatsapp_message_start')} #${orderId}.\n\n`;
+    message += `*${t('checkout.whatsapp_products')} :*\n`;
     cartProducts.forEach(item => {
       message += `- ${item.quantity}x ${item.product?.name}\n`;
       const custom = customizations[item.productId];
       if (custom && (custom.text || custom.color || custom.otherDetails || custom.referenceImage)) {
-        if (custom.text) message += `  ✍️ TEXTE : "${custom.text}"\n`;
-        if (custom.color) message += `  🎨 COULEUR : ${custom.color === 'Autre' ? custom.otherColor : custom.color}\n`;
-        if (custom.otherDetails) message += `  📝 AUTRES DÉTAILS : "${custom.otherDetails}"\n`;
+        if (custom.text) message += `  ✍️ ${t('custom.text_label').toUpperCase()} : "${custom.text}"\n`;
+        if (custom.color) message += `  🎨 ${t('custom.color_label').toUpperCase()} : ${custom.color === 'Autre' ? custom.otherColor : custom.color}\n`;
+        if (custom.otherDetails) message += `  📝 ${t('custom.details_label').toUpperCase()} : "${custom.otherDetails}"\n`;
         if (custom.referenceImage) {
-          message += `  📷 IMAGE : ${custom.imageUploadStatus === 'success' ? 'Jointe' : 'Envoi séparé via WhatsApp'}\n`;
+          message += `  📷 ${t('custom.image_label').toUpperCase()} : ${custom.imageUploadStatus === 'success' ? t('custom.image_selected') : t('custom.image_uploading')}\n`;
         }
       }
     });
-    message += `\n*Sous-total : ${subtotal.toLocaleString('fr-FR')} FCFA*\n`;
-    message += `*Frais de livraison : ${deliveryFee.toLocaleString('fr-FR')} FCFA*\n`;
-    message += `*Total : ${total.toLocaleString('fr-FR')} FCFA*\n\n`;
-    message += `*Livraison à :*\n`;
+    message += `\n*${t('checkout.whatsapp_subtotal')} : ${subtotal.toLocaleString('fr-FR')} FCFA*\n`;
+    message += `*${t('checkout.whatsapp_delivery')} : ${deliveryFee.toLocaleString('fr-FR')} FCFA*\n`;
+    message += `*${t('checkout.whatsapp_total')} : ${total.toLocaleString('fr-FR')} FCFA*\n\n`;
+    message += `*${t('checkout.whatsapp_delivery_to')} :*\n`;
     message += `${formData.name} (${formData.phone})\n`;
     message += `${deliveryCity}, ${deliveryNeighborhood}\n`;
-    message += `Repère : ${formData.landmark || 'N/A'}\n`;
+    message += `${t('checkout.whatsapp_landmark')} : ${formData.landmark || 'N/A'}\n`;
     if (formData.coordinates) {
-      message += `📍 Position GPS : https://maps.google.com/?q=${formData.coordinates.lat},${formData.coordinates.lng}\n`;
+      message += `📍 ${t('checkout.whatsapp_gps')} : https://maps.google.com/?q=${formData.coordinates.lat},${formData.coordinates.lng}\n`;
     }
-    message += `\nMerci de me guider pour le paiement.`;
+    message += `\n${t('checkout.whatsapp_guide')}`;
 
     const text = encodeURIComponent(message);
     window.open(`https://wa.me/2290154972991?text=${text}`, '_blank');
@@ -196,8 +196,8 @@ export const CheckoutPage = () => {
   if (cartItems.length === 0) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-        <p className="mb-4">Votre panier est vide.</p>
-        <button onClick={() => navigate('catalog')} className="text-amber-600 font-bold">Retour à la boutique</button>
+        <p className="mb-4">{t('cart.empty_desc')}</p>
+        <button onClick={() => navigate('catalog')} className="text-amber-600 font-bold">{t('cart.view_catalog')}</button>
       </div>
     );
   }
@@ -207,21 +207,21 @@ export const CheckoutPage = () => {
       {/* A. En-tête Minimaliste */}
       <header className={`sticky top-0 z-50 border-b shadow-sm transition-colors duration-300 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="font-extrabold text-lg tracking-tight text-amber-600 flex items-center gap-2 cursor-pointer" onClick={() => navigate('cart')}>
+          <div className="font-extrabold text-lg tracking-tight text-amber-600 flex items-center gap-2 cursor-pointer" onClick={() => goBack()}>
             <ChevronRight size={20} className={`rotate-180 ${isDark ? 'text-white' : 'text-gray-900'}`} />
             Pâtis<span className={isDark ? 'text-white' : 'text-gray-900'}>Bénin</span>
           </div>
           <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md ${isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-50 text-green-600'}`}>
-            <Lock size={12} /> Sécurisé
+            <Lock size={12} /> {t('header.certified') || 'Sécurisé'}
           </div>
         </div>
         {/* Barre de progression */}
         <div className={`max-w-md mx-auto px-4 py-2 border-t flex items-center justify-between text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-500' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
-          <span className="text-amber-600">1. Panier</span>
+          <span className="text-amber-600">1. {t('checkout.step_cart')}</span>
           <span>→</span>
-          <span className="text-amber-600">2. Infos</span>
+          <span className="text-amber-600">2. {t('checkout.step_info')}</span>
           <span>→</span>
-          <span className={isFormValid ? 'text-amber-600' : ''}>3. Paiement</span>
+          <span className={isFormValid ? 'text-amber-600' : ''}>3. {t('checkout.step_payment')}</span>
         </div>
       </header>
 
@@ -230,13 +230,13 @@ export const CheckoutPage = () => {
         {networkStatus === 'offline' && (
           <div className={`border px-4 py-3 rounded-xl flex items-start gap-3 text-sm font-medium shadow-sm transition-colors duration-300 ${isDark ? 'bg-orange-900/20 border-orange-800 text-orange-400' : 'bg-orange-100 border-orange-200 text-orange-800'}`}>
             <WifiOff size={20} className="shrink-0 mt-0.5" />
-            <p>Vous êtes hors-ligne. Vos informations sont sauvegardées. Le paiement se fera à la reconnexion ou via WhatsApp.</p>
+            <p>{t('checkout.offline_notice')}</p>
           </div>
         )}
 
         {/* B. Récapitulatif (Lightweight) */}
         <section className={`rounded-2xl p-4 shadow-sm border transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-          <h2 className={`font-bold mb-3 text-sm uppercase tracking-wide ${isDark ? 'text-white' : 'text-gray-900'}`}>Récapitulatif</h2>
+          <h2 className={`font-bold mb-3 text-sm uppercase tracking-wide ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('checkout.summary')}</h2>
           <div className="flex flex-col gap-4 mb-4">
             {cartProducts.map(item => (
               <div key={item.productId} className={`flex flex-col border-b pb-4 last:border-0 last:pb-0 ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
@@ -277,55 +277,55 @@ export const CheckoutPage = () => {
           <div className="flex gap-2 mb-4">
             <input 
               type="text" 
-              placeholder="Code Promo" 
+              placeholder={t('checkout.promo_code')}
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
               className={`flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-amber-500 transition-colors duration-300 ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
             />
-            <button className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-amber-600 text-white active:bg-amber-700' : 'bg-gray-900 text-white active:bg-gray-800'}`}>Appliquer</button>
+            <button className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isDark ? 'bg-amber-600 text-white active:bg-amber-700' : 'bg-gray-900 text-white active:bg-gray-800'}`}>{t('checkout.apply')}</button>
           </div>
 
           <div className={`border-t pt-3 flex justify-between items-center text-sm mb-2 ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
-            <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Frais de livraison ({deliveryCity} - {deliveryNeighborhood})</span>
+            <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>{t('checkout.delivery_fee')} ({deliveryCity} - {deliveryNeighborhood})</span>
             <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{deliveryFee.toLocaleString('fr-FR')} FCFA</span>
           </div>
           <div className={`border-t pt-3 flex justify-between items-center ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
-            <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Total à payer</span>
+            <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('checkout.total')}</span>
             <span className="text-xl font-extrabold text-amber-600">{total.toLocaleString('fr-FR')} FCFA</span>
           </div>
-          <p className="text-[10px] text-green-600 mt-2 flex items-center gap-1"><CheckCircle2 size={12}/> Votre panier est sauvegardé localement</p>
+          <p className="text-[10px] text-green-600 mt-2 flex items-center gap-1"><CheckCircle2 size={12}/> {t('checkout.saved_local')}</p>
         </section>
 
         {/* C. Informations de Livraison */}
         <section className={`rounded-2xl p-4 shadow-sm border transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
           <h2 className={`font-bold mb-4 text-sm uppercase tracking-wide flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            <MapPin size={16} className="text-amber-600" /> Livraison
+            <MapPin size={16} className="text-amber-600" /> {t('checkout.delivery')}
           </h2>
           
           <div className="flex flex-col gap-4">
             <div className="relative">
-              <label className="block text-xs font-bold text-gray-500 mb-1">Nom & Prénom</label>
+              <label className="block text-xs font-bold text-gray-500 mb-1">{t('checkout.name_label')}</label>
               <input 
                 type="text" name="name" value={formData.name} onChange={handleInputChange}
                 className={`w-full border rounded-xl px-4 py-3 min-h-[48px] outline-none focus:border-amber-500 transition-colors duration-300 ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                placeholder="Ex: Jean Dupont"
+                placeholder={t('checkout.name_placeholder')}
               />
               {formData.name.length > 2 && <CheckCircle2 size={18} className="absolute right-3 top-9 text-green-500" />}
             </div>
 
             <div className="relative">
-              <label className="block text-xs font-bold text-gray-500 mb-1">Téléphone (Mobile Money)</label>
+              <label className="block text-xs font-bold text-gray-500 mb-1">{t('checkout.phone_label')}</label>
               <input 
                 type="tel" name="phone" value={formData.phone} onChange={handleInputChange}
                 className={`w-full border rounded-xl px-4 py-3 min-h-[48px] outline-none focus:border-amber-500 transition-colors duration-300 ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                placeholder="+229 00 00 00 00"
+                placeholder={t('checkout.phone_placeholder')}
               />
               {isPhoneValid && <CheckCircle2 size={18} className="absolute right-3 top-9 text-green-500" />}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">Ville</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1">{t('checkout.city')}</label>
                 <select 
                   value={deliveryCity} 
                   onChange={(e) => {
@@ -341,7 +341,7 @@ export const CheckoutPage = () => {
                 </select>
               </div>
               <div className="relative">
-                <label className="block text-xs font-bold text-gray-500 mb-1">Quartier</label>
+                <label className="block text-xs font-bold text-gray-500 mb-1">{t('checkout.neighborhood')}</label>
                 <select 
                   value={deliveryNeighborhood} 
                   onChange={(e) => setDeliveryNeighborhood(e.target.value)}
@@ -355,11 +355,11 @@ export const CheckoutPage = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Point de repère (Optionnel)</label>
+              <label className="block text-xs font-bold text-gray-500 mb-1">{t('checkout.landmark_label')}</label>
               <input 
                 type="text" name="landmark" value={formData.landmark} onChange={handleInputChange}
                 className={`w-full border rounded-xl px-4 py-3 min-h-[48px] outline-none focus:border-amber-500 transition-colors duration-300 ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                placeholder="Ex: Derrière la pharmacie..."
+                placeholder={t('checkout.landmark_placeholder')}
               />
             </div>
 
@@ -368,12 +368,12 @@ export const CheckoutPage = () => {
               onClick={() => setIsMapOpen(true)}
               className="text-sm font-bold text-amber-600 flex items-center gap-1 py-2 active:opacity-70 w-max"
             >
-              <MapPin size={16} /> {formData.coordinates ? 'Modifier la position sur la carte' : 'Choisir sur la carte (Low-Data)'}
+              <MapPin size={16} /> {formData.coordinates ? t('checkout.map_change') : t('checkout.map_picker')}
             </button>
             {formData.coordinates && (
               <div className="mt-2">
                 <div className="text-xs text-green-600 font-medium flex items-center gap-1 mb-2">
-                  <CheckCircle2 size={14} /> Position GPS enregistrée
+                  <CheckCircle2 size={14} /> {t('checkout.gps_saved')}
                 </div>
                 <div 
                   className={`rounded-xl overflow-hidden border h-32 relative cursor-pointer transition-colors duration-300 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
@@ -397,7 +397,7 @@ export const CheckoutPage = () => {
                   </MapContainer>
                   <div className="absolute inset-0 bg-black/5 z-[400] hover:bg-black/10 transition-colors flex items-center justify-center">
                     <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-sm transition-colors duration-300 ${isDark ? 'bg-gray-800/90 text-white' : 'bg-white/90 text-gray-700'}`}>
-                      Toucher pour modifier
+                      {t('checkout.map_tap')}
                     </span>
                   </div>
                 </div>
@@ -410,7 +410,7 @@ export const CheckoutPage = () => {
                 className="mt-1 w-5 h-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
               />
               <span className={`text-xs leading-tight ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                J'accepte que mes données soient utilisées pour la livraison et le suivi de commande.
+                {t('checkout.consent_desc')}
               </span>
             </label>
           </div>
@@ -425,17 +425,17 @@ export const CheckoutPage = () => {
 
         {/* D. Module de Paiement Hybride */}
         <section className={`transition-opacity duration-300 ${isFormValid ? 'opacity-100' : 'opacity-70'}`}>
-          <h2 className={`font-bold mb-4 text-sm uppercase tracking-wide ${isDark ? 'text-white' : 'text-gray-900'}`}>Paiement</h2>
+          <h2 className={`font-bold mb-4 text-sm uppercase tracking-wide ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('checkout.payment')}</h2>
           
           {!isFormValid && (
             <div className={`border px-4 py-3 rounded-xl mb-4 text-sm font-medium transition-colors duration-300 ${isDark ? 'bg-amber-900/20 border-amber-800 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
-              Veuillez remplir tous les champs obligatoires (Nom, Téléphone) et accepter les conditions pour procéder au paiement.
+              {t('checkout.fill_required')}
             </div>
           )}
 
           {paymentError && (
             <div className={`border px-4 py-3 rounded-xl mb-4 text-sm font-medium transition-colors duration-300 ${isDark ? 'bg-red-900/20 border-red-800 text-red-400' : 'bg-red-50 border-red-200 text-red-800'}`}>
-              Connexion instable. Le paiement direct a échoué. Voulez-vous essayer via WhatsApp ?
+              {t('checkout.payment_error')}
             </div>
           )}
 
@@ -449,7 +449,7 @@ export const CheckoutPage = () => {
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'direct' ? (isDark ? 'border-amber-600' : 'border-gray-900') : (isDark ? 'border-gray-600' : 'border-gray-300')}`}>
                   {paymentMethod === 'direct' && <div className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-amber-600' : 'bg-gray-900'}`} />}
                 </div>
-                <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Paiement Direct (Mobile Money)</span>
+                <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('checkout.direct_payment')}</span>
               </div>
               
               {paymentMethod === 'direct' && (
@@ -466,11 +466,11 @@ export const CheckoutPage = () => {
                     {isProcessing ? (
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <>Payer {total.toLocaleString('fr-FR')} FCFA</>
+                      <>{t('checkout.pay_now')} {total.toLocaleString('fr-FR')} FCFA</>
                     )}
                   </button>
                   <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-1">
-                    <ShieldCheck size={12} /> Paiement sécurisé via FedaPay/Kkiapay. Aucune donnée bancaire stockée.
+                    <ShieldCheck size={12} /> {t('checkout.secure_payment')}
                   </p>
                 </div>
               )}
@@ -486,20 +486,20 @@ export const CheckoutPage = () => {
                   {(paymentMethod === 'whatsapp' || paymentError) && <div className="w-2.5 h-2.5 bg-[#25D366] rounded-full" />}
                 </div>
                 <span className={`font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Commander sur WhatsApp <Bot size={16} className="text-[#25D366]" />
+                  {t('checkout.order_whatsapp')} <Bot size={16} className="text-[#25D366]" />
                 </span>
               </div>
               
               {(paymentMethod === 'whatsapp' || paymentError) && (
                 <div className="pl-8 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Un agent IA vous guidera pour finaliser le paiement en toute simplicité.</p>
+                  <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t('checkout.whatsapp_agent_desc')}</p>
                   <button 
                     onClick={handleWhatsAppPayment}
                     disabled={!isFormValid}
                     className="w-full bg-[#25D366] text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 min-h-[56px] shadow-md active:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
                     <MessageCircle size={22} />
-                    Finaliser sur WhatsApp
+                    {t('checkout.finalize_whatsapp')}
                   </button>
                 </div>
               )}
@@ -513,10 +513,10 @@ export const CheckoutPage = () => {
       <footer className={`max-w-md mx-auto p-6 text-center border-t mt-8 transition-colors duration-300 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="flex justify-center gap-4 text-xs text-gray-500 mb-4">
           <a href="#" className="underline">CGV</a>
-          <a href="#" className="underline">Confidentialité</a>
+          <a href="#" className="underline">{t('footer.privacy')}</a>
         </div>
         <a href="https://wa.me/2290154972991" target="_blank" rel="noreferrer" className="text-sm font-bold text-amber-600 flex items-center justify-center gap-1">
-          <MessageCircle size={16} /> Un problème ? Contacter le support
+          <MessageCircle size={16} /> {t('checkout.support')}
         </a>
       </footer>
     </div>

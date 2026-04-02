@@ -9,7 +9,7 @@ import { AdFrame } from './AdFrame';
 type FilterType = 'all' | 'free' | 'premium';
 
 export const CoursesPage = () => {
-  const { dataSaver, setDataSaver, networkStatus, navigate, theme } = useAppContext();
+  const { dataSaver, setDataSaver, networkStatus, navigate, goBack, theme, user, t } = useAppContext();
   const isDark = theme === 'dark';
   const [filter, setFilter] = useState<FilterType>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -17,8 +17,6 @@ export const CoursesPage = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-  // Mock auth state
-  const [isLoggedIn] = useState(false);
 
   useEffect(() => {
     trackEvent('view_course_list', { filter });
@@ -65,18 +63,20 @@ export const CoursesPage = () => {
       source_channel: 'catalog' 
     });
 
-    if (!isLoggedIn) {
+    if (!user) {
       if (course.isFree) {
         navigate('signup');
       } else {
         alert("Connectez-vous pour débloquer ce cours premium");
-        // navigate('login');
+        navigate('login');
       }
     } else {
-      if (course.isFree) {
-        // navigate('course-reader', course.id);
+      if (course.isFree || user.subscription === 'premium') {
+        navigate('course-player', course.id);
       } else {
-        // navigate('checkout-course', course.id);
+        alert("Ce cours nécessite un abonnement Premium.");
+        trackEvent('click_upgrade_required', { course_id: course.id });
+        navigate('dashboard');
       }
     }
   };
@@ -86,10 +86,10 @@ export const CoursesPage = () => {
       {/* Header */}
       <header className={`px-4 py-3 sticky top-0 z-30 shadow-sm flex items-center justify-between ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex items-center space-x-3">
-          <button onClick={() => navigate('home')} className="font-bold text-xl text-amber-600 tracking-tight">
+          <button onClick={() => goBack()} className="font-bold text-xl text-amber-600 tracking-tight">
             La Bouche Fine
           </button>
-          <h1 className={`text-lg font-semibold truncate ${isDark ? 'text-white' : 'text-gray-800'}`}>Nos cours</h1>
+          <h1 className={`text-lg font-semibold truncate ${isDark ? 'text-white' : 'text-gray-800'}`}>{t('nav.courses')}</h1>
         </div>
         <div className="flex items-center space-x-2">
           <button 
@@ -116,7 +116,7 @@ export const CoursesPage = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Rechercher une formation..."
+              placeholder={t('courses.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
@@ -135,7 +135,7 @@ export const CoursesPage = () => {
               filter === 'all' ? 'bg-amber-600 text-white' : (isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700')
             }`}
           >
-            Tous
+            {t('courses.all')}
           </button>
           <button
             onClick={() => setFilter('free')}
@@ -143,7 +143,7 @@ export const CoursesPage = () => {
               filter === 'free' ? 'bg-amber-600 text-white' : (isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700')
             }`}
           >
-            Gratuits
+            {t('courses.free')}
           </button>
           <button
             onClick={() => setFilter('premium')}
@@ -151,7 +151,7 @@ export const CoursesPage = () => {
               filter === 'premium' ? 'bg-amber-600 text-white' : (isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700')
             }`}
           >
-            Premium
+            {t('courses.premium')}
           </button>
         </div>
       </div>
@@ -189,7 +189,7 @@ export const CoursesPage = () => {
           </div>
         ) : filteredCourses.length === 0 ? (
           <div className="text-center py-12">
-            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Aucun cours trouvé.</p>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('courses.no_results') || 'Aucun cours trouvé.'}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -227,7 +227,7 @@ export const CoursesPage = () => {
                         <span>•</span>
                         <span className="flex items-center">
                           <PlayCircle size={10} className="mr-0.5" />
-                          {course.lessonsCount} leçons
+                          {course.lessonsCount} {t('courses.lessons')}
                         </span>
                         <span>•</span>
                         <span className="flex items-center">
@@ -240,12 +240,12 @@ export const CoursesPage = () => {
                     <div className="flex justify-between items-center mt-auto">
                       {course.isFree ? (
                         <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wide transition-colors duration-300 ${isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'}`}>
-                          Gratuit
+                          {t('courses.free')}
                         </span>
                       ) : (
                         <div className="flex items-center space-x-2">
                           <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wide transition-colors duration-300 ${isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-800'}`}>
-                            Premium
+                            {t('courses.premium')}
                           </span>
                           <span className={`text-xs font-bold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {course.price?.toLocaleString('fr-FR')} FCFA

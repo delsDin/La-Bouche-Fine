@@ -8,17 +8,19 @@ import { PRODUCTS } from '../data/products';
 import { AdFrame } from './AdFrame';
 
 export const ProductPage = () => {
-  const { currentProductId, navigate, addToCart, cartCount, networkStatus, theme } = useAppContext();
+  const { currentProductId, navigate, goBack, addToCart, cartCount, networkStatus, theme, t } = useAppContext();
   const isDark = theme === 'dark';
   const [showStickyHeader, setShowStickyHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const product = PRODUCTS.find(p => p.id === currentProductId);
   const similarProducts = PRODUCTS.filter(p => p.category === product?.category && p.id !== product?.id).slice(0, 3);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) {
       trackEvent('View_Product', { Product_ID: product.id, Category: product.category });
+      setActiveImage(product.image);
     }
     window.scrollTo(0, 0);
   }, [product]);
@@ -41,8 +43,8 @@ export const ProductPage = () => {
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
-        <p>Produit introuvable.</p>
-        <button onClick={() => navigate('catalog')} className="mt-4 text-amber-600 font-bold min-h-[48px] px-4">Retour au catalogue</button>
+        <p>{t('product.not_found')}</p>
+        <button onClick={() => goBack()} className="mt-4 text-amber-600 font-bold min-h-[48px] px-4">{t('product.back_catalog')}</button>
       </div>
     );
   }
@@ -51,7 +53,7 @@ export const ProductPage = () => {
     trackEvent('Click_WhatsApp', { Product_ID: product.id });
     // Simulation d'un token utilisateur pour l'Agent IA
     const userToken = localStorage.getItem('userToken') || 'guest_' + Math.floor(Math.random() * 10000);
-    const text = encodeURIComponent(`Bonjour, je souhaite commander : ${product.name} - ${product.price.toLocaleString('fr-FR')} FCFA. Réf: ${product.id}`);
+    const text = encodeURIComponent(`${t('checkout.whatsapp_message_start')} : ${product.name} - ${product.price.toLocaleString('fr-FR')} FCFA. Réf: ${product.id}`);
     const utm = encodeURIComponent(`utm_source=product_page&utm_medium=whatsapp&uid=${userToken}`);
     window.open(`https://wa.me/2290154972991?text=${text}%0A%0A${utm}`, '_blank');
   };
@@ -59,6 +61,8 @@ export const ProductPage = () => {
   const handleAddToCart = () => {
     addToCart(product.id, product.price);
   };
+
+  const productImages = [product.image, ...(product.images || [])];
 
   return (
     <div className={`min-h-screen pb-24 transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
@@ -68,7 +72,7 @@ export const ProductPage = () => {
       >
         <div className="max-w-md mx-auto px-2 h-14 flex items-center justify-between">
           <button 
-            onClick={() => navigate('catalog')}
+            onClick={() => goBack()}
             className={`min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full ${isDark ? 'text-white active:bg-gray-800' : 'text-gray-900 active:bg-gray-100'}`}
             aria-label="Retour"
           >
@@ -96,13 +100,32 @@ export const ProductPage = () => {
         {networkStatus === 'offline' && (
           <div className={`px-4 py-2 text-xs font-medium flex items-center justify-center gap-2 ${isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-100 text-orange-800'}`}>
             <WifiOff size={14} />
-            Mode hors-ligne actif. La commande sera synchronisée à la reconnexion.
+            {t('product.offline_notice')}
           </div>
         )}
 
-        {/* Zone Média */}
-        <div className={`w-full aspect-square ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-          <OptimizedImage src={product.image} alt={product.name} className="w-full h-full object-cover" />
+        {/* Zone Média Multi-Images */}
+        <div className="w-full">
+          <div className={`w-full aspect-square ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+            <OptimizedImage src={activeImage || product.image} alt={product.name} className="w-full h-full object-cover" />
+          </div>
+          
+          {/* Thumbnails */}
+          {productImages.length > 1 && (
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
+              {productImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImage(img)}
+                  className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                    activeImage === img ? 'border-amber-500 scale-105' : 'border-transparent opacity-70'
+                  }`}
+                >
+                  <OptimizedImage src={img} alt={`${product.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Informations Principales */}
@@ -117,9 +140,9 @@ export const ProductPage = () => {
           
           <div className="mb-4 flex items-center gap-3">
             <span className="text-2xl font-extrabold text-amber-600">{product.price.toLocaleString('fr-FR')} FCFA</span>
-            {product.stockLevel === 'high' && <span className={`text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 ${isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-800'}`}><span className="w-2 h-2 rounded-full bg-green-500"></span> Disponible</span>}
+            {product.stockLevel === 'high' && <span className={`text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 ${isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-800'}`}><span className="w-2 h-2 rounded-full bg-green-500"></span> {t('catalog.available')}</span>}
             {product.stockLevel === 'low' && <span className={`text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 ${isDark ? 'bg-orange-900/20 text-orange-400' : 'bg-orange-100 text-orange-800'}`}><span className="w-2 h-2 rounded-full bg-orange-500"></span> Faible stock</span>}
-            {product.stockLevel === 'out' && <span className={`text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 ${isDark ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-800'}`}><span className="w-2 h-2 rounded-full bg-red-500"></span> Épuisé</span>}
+            {product.stockLevel === 'out' && <span className={`text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 ${isDark ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-800'}`}><span className="w-2 h-2 rounded-full bg-red-500"></span> {t('catalog.out_of_stock')}</span>}
           </div>
 
           <p className={`text-base leading-relaxed mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -145,7 +168,7 @@ export const ProductPage = () => {
               className="w-full bg-[#25D366] text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 min-h-[56px] shadow-md active:scale-[0.98] transition-transform"
             >
               <MessageCircle size={24} />
-              Commander sur WhatsApp
+              {t('product.order_whatsapp')}
             </button>
             
             <div className="grid grid-cols-2 gap-3">
@@ -154,14 +177,14 @@ export const ProductPage = () => {
                 className={`w-full border-2 rounded-xl font-bold text-base flex items-center justify-center gap-2 min-h-[48px] transition-colors ${isDark ? 'border-gray-700 text-white active:bg-gray-800' : 'border-gray-900 text-gray-900 active:bg-gray-100'}`}
               >
                 <ShoppingCart size={20} />
-                Ajouter
+                {t('catalog.add')}
               </button>
               <button
                 disabled={networkStatus === 'offline'}
                 className={`w-full rounded-xl font-bold text-base flex items-center justify-center gap-2 min-h-[48px] transition-colors ${networkStatus === 'offline' ? (isDark ? 'bg-gray-800 text-gray-600' : 'bg-gray-200 text-gray-400') + ' cursor-not-allowed' : (isDark ? 'bg-amber-600 text-white active:bg-amber-700' : 'bg-gray-900 text-white active:bg-gray-800')}`}
               >
                 <CreditCard size={20} />
-                Payer en ligne
+                {t('product.pay_now')}
               </button>
             </div>
           </div>
@@ -170,7 +193,7 @@ export const ProductPage = () => {
           <div className={`rounded-2xl p-4 mb-8 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
             <div className={`flex items-center gap-3 mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               <Clock size={20} className="text-amber-600" />
-              <span className="text-sm font-medium">Préparation rapide (24h)</span>
+              <span className="text-sm font-medium">{t('product.delivery_desc')}</span>
             </div>
             <div className={`flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               <MapPin size={20} className="text-amber-600" />
@@ -181,7 +204,7 @@ export const ProductPage = () => {
           {/* Produits Similaires */}
           {similarProducts.length > 0 && (
             <div className="mb-8">
-              <h3 className={`font-extrabold text-lg mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Vous aimerez aussi</h3>
+              <h3 className={`font-extrabold text-lg mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('product.similar')}</h3>
               <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
                 {similarProducts.map(sim => (
                   <div 

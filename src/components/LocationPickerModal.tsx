@@ -38,7 +38,7 @@ const LocationMarker = ({ position, setPosition }: { position: any, setPosition:
 };
 
 export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClose, onConfirm, initialLocation }) => {
-  const { theme } = useAppContext();
+  const { theme, t } = useAppContext();
   const isDark = theme === 'dark';
   // Default to Cotonou, Benin if no initial location
   const defaultCenter = { lat: 6.36536, lng: 2.41833 };
@@ -67,7 +67,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
       },
       (err) => {
         console.error(err);
-        alert("Impossible d'obtenir votre position. Veuillez vérifier vos permissions.");
+        alert(t('map.locate_error'));
         setIsLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -87,7 +87,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
         <div className={`flex justify-between items-center p-4 border-b transition-colors duration-300 ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
           <h3 className={`font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             <MapPin size={20} className="text-amber-600" />
-            Choisir sur la carte
+            {t('map.title')}
           </h3>
           <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}>
             <X size={20} />
@@ -103,7 +103,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
             zoomControl={false}
           >
             <LayersControl position="topright">
-              <LayersControl.BaseLayer checked name="Plan (Standard)">
+              <LayersControl.BaseLayer checked name={t('map.street')}>
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url={isDark 
@@ -112,7 +112,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
                   }
                 />
               </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Satellite">
+              <LayersControl.BaseLayer name={t('map.satellite')}>
                 <TileLayer
                   attribution='&copy; <a href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer">Esri</a>'
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -133,7 +133,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
           
           {!position && (
             <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-[400] backdrop-blur px-4 py-2 rounded-full shadow-md text-sm font-medium pointer-events-none transition-colors duration-300 ${isDark ? 'bg-gray-800/90 text-gray-300' : 'bg-white/90 text-gray-700'}`}>
-              Touchez la carte pour placer un repère
+              {t('map.instruction')}
             </div>
           )}
         </div>
@@ -144,7 +144,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
             disabled={!position}
             className="w-full bg-amber-600 text-white font-bold py-3.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed active:bg-amber-700 transition-colors"
           >
-            Confirmer cette position
+            {t('map.confirm')}
           </button>
         </div>
       </div>

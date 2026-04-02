@@ -8,7 +8,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string; // BEN-YYYYMMDD-XXXX
-  status: 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered';
+  status: 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'pending';
   date: string;
   total: number;
   deliveryFee: number;

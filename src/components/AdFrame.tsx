@@ -16,12 +16,12 @@ export const AdFrame: React.FC<AdFrameProps & { className?: string }> = ({
   imageUrl = "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600",
   className = ""
 }) => {
-  const { dataSaver, theme } = useAppContext();
+  const { dataSaver, theme, user } = useAppContext();
   const [dismissed, setDismissed] = React.useState(false);
   const isDark = theme === 'dark';
 
-  // Si le mode économie de données est activé ou si la pub est fermée, on ne montre rien
-  if (dataSaver || dismissed) return null;
+  // Si le mode économie de données est activé, si la pub est fermée, ou si l'utilisateur est Premium, on ne montre rien
+  if (dataSaver || dismissed || user?.subscription === 'premium') return null;
 
   if (type === 'banner') {
     return (

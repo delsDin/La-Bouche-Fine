@@ -23,18 +23,18 @@ interface Props {
   onChange: (data: CustomizationData) => void;
 }
 
-const COLORS = [
-  { id: 'Rouge', label: '🔴 Rouge', hex: '#ef4444' },
-  { id: 'Bleu', label: '🔵 Bleu', hex: '#3b82f6' },
-  { id: 'Vert', label: '🟢 Vert', hex: '#22c55e' },
-  { id: 'Violet', label: '🟣 Violet', hex: '#a855f7' },
-  { id: 'Blanc', label: '⚪ Blanc', hex: '#ffffff' },
-  { id: 'Chocolat', label: '🟤 Chocolat', hex: '#78350f' },
-  { id: 'Autre', label: '🎨 Autre', hex: 'transparent' }
+const COLORS = (t: (key: string) => string) => [
+  { id: 'Rouge', label: '🔴 ' + (t('custom.color_red') || 'Rouge'), hex: '#ef4444' },
+  { id: 'Bleu', label: '🔵 ' + (t('custom.color_blue') || 'Bleu'), hex: '#3b82f6' },
+  { id: 'Vert', label: '🟢 ' + (t('custom.color_green') || 'Vert'), hex: '#22c55e' },
+  { id: 'Violet', label: '🟣 ' + (t('custom.color_purple') || 'Violet'), hex: '#a855f7' },
+  { id: 'Blanc', label: '⚪ ' + (t('custom.color_white') || 'Blanc'), hex: '#ffffff' },
+  { id: 'Chocolat', label: '🟤 ' + (t('custom.color_chocolate') || 'Chocolat'), hex: '#78350f' },
+  { id: 'Autre', label: '🎨 ' + (t('custom.color_other') || 'Autre'), hex: 'transparent' }
 ];
 
 export const ProductCustomization: React.FC<Props> = ({ productId, productName, dataSaver, networkStatus, allowFullCustomization, data, onChange }) => {
-  const { theme } = useAppContext();
+  const { theme, t } = useAppContext();
   const isDark = theme === 'dark';
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +93,7 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
           // Check size (approximate base64 size to bytes)
           const sizeInBytes = Math.round((dataUrl.length * 3) / 4);
           if (sizeInBytes > 500 * 1024) {
-            reject(new Error("L'image est trop volumineuse même après compression."));
+            reject(new Error(t('custom.error_too_large')));
           } else {
             resolve(dataUrl);
           }
@@ -109,7 +109,7 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("L'image originale est trop grande (max 5 Mo avant compression).");
+      alert(t('custom.error_size'));
       return;
     }
 
@@ -136,7 +136,7 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
     } catch (error) {
       console.error("Compression error:", error);
       updateData({ imageUploadStatus: 'failed' });
-      alert("Erreur lors de la compression de l'image.");
+      alert(t('custom.error_compression'));
       trackEvent('Image_Upload_Failed', { Reason: 'Compression_Error' });
     }
   };
@@ -152,7 +152,7 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
         className={`w-full px-4 py-3 flex items-center justify-between text-sm font-bold transition-colors ${isDark ? 'text-gray-300 active:bg-gray-700' : 'text-gray-700 active:bg-gray-100'}`}
       >
         <span className="flex items-center gap-2">
-          🎨 Personnaliser ce produit {isValid && <CheckCircle2 size={16} className="text-green-500" />}
+          🎨 {t('custom.title')} {isValid && <CheckCircle2 size={16} className="text-green-500" />}
         </span>
         {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
@@ -164,13 +164,13 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
             <>
               {/* 1. Texte sur le gâteau */}
               <div>
-                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>1. Texte sur le gâteau</label>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>{t('custom.text_label')}</label>
                 <div className="relative">
                   <input 
                     type="text" 
                     value={data.text}
                     onChange={handleTextChange}
-                    placeholder="Ex: Joyeux Anniv Marie"
+                    placeholder={t('custom.text_placeholder')}
                     className={`w-full border rounded-xl px-4 py-3 min-h-[48px] outline-none focus:border-amber-500 text-sm transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
                   />
                   <span className={`absolute right-3 top-3.5 text-xs font-bold ${data.text.length >= 30 ? 'text-red-500' : 'text-gray-400'}`}>
@@ -178,15 +178,15 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
                   </span>
                 </div>
                 <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
-                  <AlertCircle size={10} /> Caractères alphanumériques uniquement
+                  <AlertCircle size={10} /> {t('custom.text_hint')}
                 </p>
               </div>
 
               {/* 2. Thème de couleur */}
               <div>
-                <label className={`block text-xs font-bold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>2. Thème de couleur</label>
+                <label className={`block text-xs font-bold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>{t('custom.color_label')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {COLORS.map(c => (
+                  {COLORS(t).map(c => (
                     <button
                       key={c.id}
                       onClick={() => handleColorSelect(c.id)}
@@ -205,7 +205,7 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
                     type="text" 
                     value={data.otherColor}
                     onChange={(e) => updateData({ otherColor: e.target.value })}
-                    placeholder="Précisez la couleur souhaitée..."
+                    placeholder={t('custom.color_other_placeholder')}
                     className={`w-full mt-2 border rounded-xl px-4 py-3 min-h-[48px] outline-none focus:border-amber-500 text-sm transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
                   />
                 )}
@@ -216,12 +216,12 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
           {/* 3. Autres détails */}
           <div>
             <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
-              {allowFullCustomization ? '3. ' : ''}Autres détails (Optionnel)
+              {allowFullCustomization ? '3. ' : ''}{t('custom.details_label')}
             </label>
             <textarea 
               value={data.otherDetails || ''}
               onChange={(e) => updateData({ otherDetails: e.target.value })}
-              placeholder="Ex: Sans arachides, livraison avant 10h..."
+              placeholder={t('custom.details_placeholder')}
               className={`w-full border rounded-xl px-4 py-3 min-h-[80px] outline-none focus:border-amber-500 text-sm resize-none transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
             />
           </div>
@@ -229,11 +229,11 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
           {allowFullCustomization && (
             <div>
               {/* 4. Image de référence */}
-              <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>4. Image de référence (Optionnel)</label>
+              <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>{t('custom.image_label')}</label>
             
             {dataSaver ? (
               <div className={`border px-3 py-2 rounded-lg text-xs flex items-center gap-2 transition-colors duration-300 ${isDark ? 'bg-orange-900/20 border-orange-900/30 text-orange-400' : 'bg-orange-50 border-orange-200 text-orange-800'}`}>
-                <WifiOff size={14} /> Upload d'image désactivé en mode économie de données.
+                <WifiOff size={14} /> {t('custom.image_datasaver')}
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -252,14 +252,14 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
                   {data.imageUploadStatus === 'uploading' ? (
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-xs font-bold text-amber-600">Compression & Envoi...</span>
+                      <span className="text-xs font-bold text-amber-600">{t('custom.image_uploading')}</span>
                     </div>
                   ) : data.referenceImage ? (
                     <div className="flex items-center gap-3 w-full">
                       <img src={data.referenceImage} alt="Aperçu" className={`w-12 h-12 object-cover rounded-lg border transition-colors duration-300 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
                       <div className="flex-1 text-left">
-                        <span className={`text-xs font-bold block transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>Image sélectionnée</span>
-                        <span className="text-[10px] text-gray-500">Changer l'image</span>
+                        <span className={`text-xs font-bold block transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('custom.image_selected')}</span>
+                        <span className="text-[10px] text-gray-500">{t('custom.image_change')}</span>
                       </div>
                       {data.imageUploadStatus === 'success' && <CheckCircle2 size={20} className="text-green-500" />}
                       {data.imageUploadStatus === 'failed' && <AlertCircle size={20} className="text-red-500" />}
@@ -267,20 +267,20 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
                   ) : (
                     <>
                       <Camera size={24} />
-                      <span className="text-sm font-bold">Ajouter une photo</span>
-                      <span className="text-[10px] text-center">Format: WebP/JPG, Max 500 Ko</span>
+                      <span className="text-sm font-bold">{t('custom.image_add')}</span>
+                      <span className="text-[10px] text-center">{t('custom.image_hint')}</span>
                     </>
                   )}
                 </button>
                 
                 {data.imageUploadStatus === 'failed' && (
                   <div className={`border px-3 py-2 rounded-lg text-xs transition-colors duration-300 ${isDark ? 'bg-red-900/20 border-red-900/30 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
-                    Image non envoyée (réseau instable). Voulez-vous continuer sans ou l'envoyer via WhatsApp ?
+                    {t('custom.image_failed')}
                   </div>
                 )}
 
                 <p className="text-[10px] text-gray-500 flex items-start gap-1 leading-tight">
-                  <span className="text-amber-500 font-bold">💡 Astuce:</span> Prenez la photo en basse résolution pour économiser vos données.
+                  <span className="text-amber-500 font-bold">💡 Astuce:</span> {t('custom.image_tip')}
                 </p>
 
                 {data.referenceImage && (
@@ -292,7 +292,7 @@ export const ProductCustomization: React.FC<Props> = ({ productId, productName, 
                       className="mt-0.5 w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                     />
                     <span className={`text-[10px] leading-tight transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      J'autorise le stockage de cette image pour la préparation de ma commande.
+                      {t('custom.image_consent')}
                     </span>
                   </label>
                 )}

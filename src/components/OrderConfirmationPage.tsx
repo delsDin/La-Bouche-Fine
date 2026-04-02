@@ -6,7 +6,7 @@ import { Order } from '../types';
 import { AdFrame } from './AdFrame';
 
 export const OrderConfirmationPage = () => {
-  const { currentOrderId, navigate, networkStatus, theme } = useAppContext();
+  const { currentOrderId, navigate, goBack, networkStatus, theme, t } = useAppContext();
   const isDark = theme === 'dark';
   const [order, setOrder] = useState<Order | null>(null);
   const [copied, setCopied] = useState(false);
@@ -67,8 +67,8 @@ export const OrderConfirmationPage = () => {
   if (!order) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-        <p className="mb-4">Commande introuvable.</p>
-        <button onClick={() => navigate('home')} className="text-amber-600 font-bold">Retour à l'accueil</button>
+        <p className="mb-4">{t('order.not_found')}</p>
+        <button onClick={() => goBack()} className="text-amber-600 font-bold">{t('order.back_home')}</button>
       </div>
     );
   }
@@ -81,39 +81,39 @@ export const OrderConfirmationPage = () => {
       <header className={`sticky top-0 z-10 border-b px-4 py-4 flex items-center justify-center shadow-sm ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
         <div className={`flex items-center gap-2 ${isPending ? 'text-amber-600' : 'text-green-600'}`}>
           {isPending ? <AlertCircle size={24} className={isDark ? 'fill-amber-900/20' : 'fill-amber-100'} /> : <CheckCircle2 size={24} className={isDark ? 'fill-green-900/20' : 'fill-green-100'} />}
-          <h1 className="font-bold text-lg">{isPending ? 'EN ATTENTE DE PAIEMENT' : 'COMMANDE CONFIRMÉE'}</h1>
+          <h1 className="font-bold text-lg">{isPending ? t('order.pending') : t('order.confirmed')}</h1>
         </div>
       </header>
 
       <main className="p-4 max-w-md mx-auto flex flex-col gap-6">
         <div className="text-center">
           <p className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {isPending ? '⏳ Presque terminé !' : '🎉 Merci pour votre commande !'}
+            {isPending ? t('order.almost_done') : t('order.thank_you')}
           </p>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             {isPending 
-              ? 'Veuillez finaliser votre paiement avec notre agent sur WhatsApp.' 
-              : 'Votre commande a été enregistrée avec succès.'}
+              ? t('order.pending_desc')
+              : t('order.confirmed_desc')}
           </p>
         </div>
 
         {isPending && (
           <section className={`rounded-2xl p-5 border text-center animate-in fade-in slide-in-from-top-2 ${isDark ? 'bg-amber-900/20 border-amber-800' : 'bg-amber-50 border-amber-200'}`}>
             <p className={`text-sm font-medium mb-4 ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
-              Une fois le paiement effectué sur WhatsApp, cliquez sur le bouton ci-dessous pour confirmer votre commande.
+              {t('order.pending_instruction')}
             </p>
             <button 
               onClick={handleConfirmPayment}
               className="w-full bg-amber-600 text-white rounded-xl font-bold py-3.5 flex items-center justify-center gap-2 active:bg-amber-700 transition-colors shadow-sm"
             >
-              <CheckCircle2 size={20} /> J'ai finalisé mon paiement
+              <CheckCircle2 size={20} /> {t('order.confirm_payment')}
             </button>
           </section>
         )}
 
         {/* Code Section */}
         <section className={`rounded-2xl p-5 shadow-sm border text-center ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-          <h2 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>VOTRE CODE DE SUIVI</h2>
+          <h2 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('order.code')}</h2>
           <div className={`border-2 border-dashed rounded-xl py-4 px-2 mb-4 ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-300'}`}>
             <span className={`font-mono text-xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.id}</span>
           </div>
@@ -122,14 +122,14 @@ export const OrderConfirmationPage = () => {
               onClick={handleCopy}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${isDark ? 'bg-gray-700 text-gray-300 active:bg-gray-600' : 'bg-gray-100 text-gray-700 active:bg-gray-200'}`}
             >
-              <Copy size={16} /> {copied ? 'Copié !' : 'Copier'}
+              <Copy size={16} /> {copied ? t('order.copied') : t('order.copy')}
             </button>
             {navigator.share && (
               <button 
                 onClick={handleShare}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${isDark ? 'bg-gray-700 text-gray-300 active:bg-gray-600' : 'bg-gray-100 text-gray-700 active:bg-gray-200'}`}
               >
-                <Share2 size={16} /> Partager
+                <Share2 size={16} /> {t('order.share')}
               </button>
             )}
           </div>
@@ -138,7 +138,7 @@ export const OrderConfirmationPage = () => {
         {/* Status Section */}
         <section className={`rounded-2xl p-5 shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
           <h2 className={`text-sm font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            <MapPin size={18} className="text-amber-500" /> Statut Actuel
+            <MapPin size={18} className="text-amber-500" /> {t('order.status_current')}
           </h2>
           
           <div className="relative flex justify-between items-center mb-2">
@@ -160,10 +160,10 @@ export const OrderConfirmationPage = () => {
             </div>
           </div>
           <div className={`flex justify-between text-[10px] font-bold px-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            <span className={isPending ? 'text-amber-600' : 'text-green-600'}>{isPending ? 'En attente' : 'Confirmée'}</span>
-            <span>Préparation</span>
-            <span>Prête</span>
-            <span>Livrée</span>
+            <span className={isPending ? 'text-amber-600' : 'text-green-600'}>{isPending ? t('order.pending_status') || 'En attente' : t('order.confirmed_status') || 'Confirmée'}</span>
+            <span>{t('order.preparing')}</span>
+            <span>{t('order.ready')}</span>
+            <span>{t('order.delivered')}</span>
           </div>
         </section>
 
@@ -177,8 +177,8 @@ export const OrderConfirmationPage = () => {
               className="mt-1 w-5 h-5 rounded border-green-300 text-green-600 focus:ring-green-500"
             />
             <div>
-              <span className={`block text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-900'}`}>Recevoir les mises à jour sur WhatsApp</span>
-              <span className={`block text-xs mt-0.5 ${isDark ? 'text-green-500/80' : 'text-green-700'}`}>Soyez notifié à chaque étape de votre commande.</span>
+              <span className={`block text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-900'}`}>{t('order.whatsapp_optin')}</span>
+              <span className={`block text-xs mt-0.5 ${isDark ? 'text-green-500/80' : 'text-green-700'}`}>{t('order.whatsapp_optin_desc')}</span>
             </div>
           </label>
         </section>
@@ -186,7 +186,7 @@ export const OrderConfirmationPage = () => {
         {/* Order Details */}
         <section className={`rounded-2xl p-5 shadow-sm border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
           <h2 className={`text-sm font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            <Package size={18} className="text-amber-500" /> Détails de la commande
+            <Package size={18} className="text-amber-500" /> {t('checkout.summary')}
           </h2>
           <div className="flex flex-col gap-3 text-sm">
             {order.items.map((item, idx) => (
@@ -206,17 +206,17 @@ export const OrderConfirmationPage = () => {
             ))}
             
             <div className={`pt-3 border-t flex justify-between ${isDark ? 'border-gray-700 text-gray-400' : 'border-gray-100 text-gray-600'}`}>
-              <span>Frais de livraison</span>
+              <span>{t('checkout.delivery_fee')}</span>
               <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(order.deliveryFee || 0).toLocaleString('fr-FR')} F</span>
             </div>
             <div className={`pt-3 border-t flex justify-between font-bold text-lg ${isDark ? 'border-gray-700 text-white' : 'border-gray-100 text-gray-900'}`}>
-              <span>Total</span>
+              <span>{t('checkout.total')}</span>
               <span>{order.total.toLocaleString('fr-FR')} FCFA</span>
             </div>
 
             <div className={`pt-3 border-t text-xs flex flex-col gap-1 ${isDark ? 'border-gray-700 text-gray-400' : 'border-gray-100 text-gray-600'}`}>
-              <p><span className="font-bold">Livraison:</span> {order.delivery.city}, {order.delivery.neighborhood}</p>
-              <p><span className="font-bold">Contact:</span> {order.delivery.phone}</p>
+              <p><span className="font-bold">{t('checkout.delivery')}:</span> {order.delivery.city}, {order.delivery.neighborhood}</p>
+              <p><span className="font-bold">{t('order.contact')}:</span> {order.delivery.phone}</p>
               {order.delivery.coordinates && (
                 <a 
                   href={`https://maps.google.com/?q=${order.delivery.coordinates.lat},${order.delivery.coordinates.lng}`}
@@ -224,7 +224,7 @@ export const OrderConfirmationPage = () => {
                   rel="noopener noreferrer"
                   className="text-amber-600 font-bold flex items-center gap-1 mt-1 hover:underline"
                 >
-                  📍 Voir la position sur la carte
+                  📍 {t('checkout.map_picker')}
                 </a>
               )}
             </div>
@@ -237,13 +237,13 @@ export const OrderConfirmationPage = () => {
             onClick={() => window.open('https://wa.me/2290154972991', '_blank')}
             className={`w-full border rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${isDark ? 'bg-gray-800 border-gray-700 text-gray-300 active:bg-gray-700' : 'bg-white border-gray-200 text-gray-700 active:bg-gray-50'}`}
           >
-            <Phone size={18} /> Contacter le support
+            <Phone size={18} /> {t('checkout.support')}
           </button>
           <button 
-            onClick={() => navigate('home')}
+            onClick={() => goBack()}
             className="w-full bg-gray-900 text-white rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 active:bg-gray-800 transition-colors"
           >
-            <Home size={18} /> Retour à l'accueil
+            <Home size={18} /> {t('order.back_home')}
           </button>
         </div>
 
@@ -252,7 +252,7 @@ export const OrderConfirmationPage = () => {
         {networkStatus === 'offline' && (
           <div className={`border px-4 py-3 rounded-xl text-xs flex items-start gap-2 ${isDark ? 'bg-orange-900/20 border-orange-800 text-orange-400' : 'bg-orange-50 border-orange-200 text-orange-800'}`}>
             <span className="text-lg leading-none">💡</span>
-            <p><strong>Astuce:</strong> Sauvegardez ce code. Il fonctionne même sans connexion pour consulter le dernier statut connu.</p>
+            <p><strong>{t('common.tip') || 'Astuce'}:</strong> {t('order.offline_tip')}</p>
           </div>
         )}
       </main>

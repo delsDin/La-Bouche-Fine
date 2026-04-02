@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Moon, Sun, MessageCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Moon, Sun, MessageCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../lib/AppContext';
 import { trackEvent } from '../lib/tracking';
 import logo from '../data/boucheFine.png';
 
 export const LoginPage = () => {
-  const { theme, setTheme, navigate, networkStatus } = useAppContext();
+  const { theme, setTheme, navigate, goBack, networkStatus, login, t } = useAppContext();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -79,6 +79,11 @@ export const LoginPage = () => {
       // Mock success/fail
       if (password === 'password123') {
         trackEvent('Login_Success', { User_ID: 'user_123', Subscription_Status: 'Free' });
+        login('Élève', 'free');
+        navigate('home');
+      } else if (password === 'premium123') {
+        trackEvent('Login_Success', { User_ID: 'user_456', Subscription_Status: 'Premium' });
+        login('Élève Premium', 'premium');
         navigate('home');
       } else {
         throw new Error('Identifiants incorrects');
@@ -98,6 +103,9 @@ export const LoginPage = () => {
       {/* A. Header */}
       <header className="h-[15vh] flex items-center justify-between px-6">
         <div className="flex items-center space-x-3">
+          <button onClick={() => goBack()} className="p-2 -ml-2 rounded-full hover:bg-gray-100/10">
+            <ArrowLeft size={24} />
+          </button>
           <img 
             src={logo} 
             alt="La Bouche Fine Logo" 
@@ -119,14 +127,14 @@ export const LoginPage = () => {
       {/* B. Zone de Formulaire */}
       <main className="flex-1 flex flex-col px-6 py-4 max-w-md mx-auto w-full">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2">Bon retour !</h2>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Connectez-vous pour accéder à vos cours.</p>
+          <h2 className="text-2xl font-bold mb-2">{t('login.title')}</h2>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('login.subtitle')}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           {/* Identifiant */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium px-1">Numéro de téléphone</label>
+            <label className="text-sm font-medium px-1">{t('login.phone')}</label>
             <div className="flex items-center">
               <div className={`border-2 border-r-0 rounded-l-xl px-3 h-12 flex items-center font-bold ${isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
                 +229
@@ -148,13 +156,13 @@ export const LoginPage = () => {
           {/* Mot de Passe */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center px-1">
-              <label className="text-sm font-medium">Mot de passe</label>
+              <label className="text-sm font-medium">{t('login.password')}</label>
               <button 
                 type="button"
                 className="text-xs text-amber-500 font-medium"
                 onClick={() => window.open('https://wa.me/2290154972991?text=J%27ai%20oublié%20mon%20mot%20de%20passe', '_blank')}
               >
-                Mot de passe oublié ?
+                {t('login.forgot')}
               </button>
             </div>
             <div className="relative">
@@ -212,7 +220,7 @@ export const LoginPage = () => {
                 : 'bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600'
             }`}
           >
-            {isLoading ? <Loader2 className="animate-spin" size={24} /> : "Se Connecter"}
+            {isLoading ? <Loader2 className="animate-spin" size={24} /> : t('login.submit')}
           </button>
         </form>
 
@@ -235,12 +243,12 @@ export const LoginPage = () => {
           </button>
 
           <p className="text-center text-sm">
-            Pas encore de compte ?{' '}
+            {t('login.no_account')}{' '}
             <button 
               onClick={() => navigate('signup')}
               className="text-amber-500 font-bold hover:underline"
             >
-              Créer un compte
+              {t('login.signup')}
             </button>
           </p>
         </div>

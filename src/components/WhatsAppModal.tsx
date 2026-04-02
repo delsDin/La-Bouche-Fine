@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShoppingBag, MessageCircle, Bot } from 'lucide-react';
+import { X, ShoppingBag, MessageCircle, Bot, ChefHat } from 'lucide-react';
 import { useAppContext } from '../lib/AppContext';
 import { trackEvent } from '../lib/tracking';
 
@@ -10,7 +10,7 @@ interface WhatsAppModalProps {
 }
 
 export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose }) => {
-  const { navigate, theme } = useAppContext();
+  const { navigate, theme, t } = useAppContext();
   const isDark = theme === 'dark';
 
   const handleOption1 = () => {
@@ -28,6 +28,12 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
   const handleOption3 = () => {
     trackEvent('Click', { Target: 'WhatsApp_Option_AI_Agent' });
     navigate('ai-agent');
+    onClose();
+  };
+
+  const handleOption4 = () => {
+    trackEvent('Click', { Target: 'WhatsApp_Option_AI_Tutor' });
+    navigate('ai-tutor');
     onClose();
   };
 
@@ -51,7 +57,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
           >
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Comment pouvons-nous vous aider ?</h2>
+                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('whatsapp.title')}</h2>
                 <button 
                   onClick={onClose}
                   className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
@@ -69,8 +75,8 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
                     <ShoppingBag size={24} />
                   </div>
                   <div>
-                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Commande personnalisée</div>
-                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Sur le site avec un agent</div>
+                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('whatsapp.custom_order')}</div>
+                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('whatsapp.custom_order_desc')}</div>
                   </div>
                 </button>
 
@@ -82,8 +88,8 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
                     <MessageCircle size={24} />
                   </div>
                   <div>
-                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Commande WhatsApp</div>
-                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Directement via messagerie</div>
+                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('whatsapp.direct_order')}</div>
+                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('whatsapp.direct_order_desc')}</div>
                   </div>
                 </button>
 
@@ -95,8 +101,21 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose })
                     <Bot size={24} />
                   </div>
                   <div>
-                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Discuter avec un agent</div>
-                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Agent conversationnel (IA)</div>
+                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('whatsapp.ai_agent')}</div>
+                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('whatsapp.ai_agent_desc')}</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={handleOption4}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left group ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-purple-50 hover:bg-purple-100'}`}
+                >
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-purple-500/20 text-purple-500' : 'bg-white text-purple-600 shadow-sm'}`}>
+                    <ChefHat size={24} />
+                  </div>
+                  <div>
+                    <div className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Tuteur IA Pâtisserie</div>
+                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Apprenez les secrets de la pâtisserie avec notre expert IA.</div>
                   </div>
                 </button>
               </div>

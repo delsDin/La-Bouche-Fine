@@ -5,7 +5,7 @@ import { MessageCircle, BookOpen } from 'lucide-react';
 import { useAppContext } from '../lib/AppContext';
 
 export const Hero = () => {
-  const { theme } = useAppContext();
+  const { theme, t, navigate } = useAppContext();
   const isDark = theme === 'dark';
 
   const handleWhatsApp = () => {
@@ -15,7 +15,7 @@ export const Hero = () => {
 
   const handleLMS = () => {
     trackEvent('Click', { Target: 'LMS_Free' });
-    // Navigation vers le LMS
+    navigate('courses');
   };
 
   return (
@@ -26,10 +26,10 @@ export const Hero = () => {
         className="w-full h-48 rounded-2xl mb-6 shadow-sm"
       />
       <h1 className={`text-2xl font-extrabold leading-tight mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-        La Bouche Fine : Pâtisserie & Formation
+        {t('hero.title')}
       </h1>
       <p className={`text-base mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        Apprenez et Commandez sans couper vos données. Rapide, simple et accessible même en 3G.
+        {t('hero.subtitle')}
       </p>
 
       <div className="flex flex-col gap-3">
@@ -38,7 +38,7 @@ export const Hero = () => {
           className="w-full bg-[#25D366] text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-2 min-h-[54px] shadow-md active:scale-[0.98] transition-transform"
         >
           <MessageCircle size={22} />
-          Commander sur WhatsApp
+          {t('hero.order_whatsapp')}
         </button>
         <button
           onClick={handleLMS}
@@ -47,7 +47,7 @@ export const Hero = () => {
           }`}
         >
           <BookOpen size={22} />
-          Voir les Cours Gratuits
+          {t('hero.free_courses')}
         </button>
       </div>
     </section>

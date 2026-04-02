@@ -5,7 +5,7 @@ import { trackEvent } from '../lib/tracking';
 import { AdFrame } from './AdFrame';
 
 export const PublicTrackingPage = () => {
-  const { navigate, theme, dataSaver, setDataSaver } = useAppContext();
+  const { navigate, goBack, theme, dataSaver, setDataSaver } = useAppContext();
   const isDark = theme === 'dark';
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -61,10 +61,7 @@ export const PublicTrackingPage = () => {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <header className={`border-b px-4 py-4 flex items-center justify-between shadow-sm ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
-        <button onClick={() => {
-          window.history.pushState({}, '', '/');
-          navigate('home');
-        }} className={`p-2 -ml-2 rounded-full ${isDark ? 'text-gray-400 hover:text-white active:bg-gray-800' : 'text-gray-500 hover:text-gray-900 active:bg-gray-100'}`}>
+        <button onClick={() => goBack()} className={`p-2 -ml-2 rounded-full ${isDark ? 'text-gray-400 hover:text-white active:bg-gray-800' : 'text-gray-500 hover:text-gray-900 active:bg-gray-100'}`}>
           <Home size={20} />
         </button>
         <h1 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>SUIVI DE COMMANDE</h1>

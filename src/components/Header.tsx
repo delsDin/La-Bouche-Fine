@@ -4,7 +4,7 @@ import { useAppContext } from '../lib/AppContext';
 import logo from '../data/boucheFine.png';
 
 export const Header = () => {
-  const { cartCount, networkStatus, dataSaver, setDataSaver, currentPage, navigate, theme } = useAppContext();
+  const { cartCount, networkStatus, dataSaver, setDataSaver, currentPage, navigate, theme, user, t } = useAppContext();
 
   const isDark = theme === 'dark';
 
@@ -12,7 +12,7 @@ export const Header = () => {
     <header className={`sticky top-0 z-50 border-b shadow-sm transition-colors duration-300 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
       <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between md:max-w-4xl">
         {/* Logo & Network Indicator */}
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('home')}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('accueil', undefined, true)}>
           <img 
             src={logo} 
             alt="La Bouche Fine Logo" 
@@ -30,34 +30,36 @@ export const Header = () => {
 
         {/* Actions (Zones de clic > 48px) */}
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => setDataSaver(!dataSaver)}
-            className={`flex items-center gap-1 text-xs font-medium min-h-[48px] min-w-[48px] justify-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
-            aria-label="Mode économie de données"
-          >
-            {dataSaver ? <ToggleRight size={24} className="text-amber-600" /> : <ToggleLeft size={24} />}
-          </button>
+          {user?.subscription !== 'premium' && (
+            <button
+              onClick={() => setDataSaver(!dataSaver)}
+              className={`flex items-center gap-1 text-xs font-medium min-h-[48px] min-w-[48px] justify-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+              aria-label={t('header.datasaver')}
+            >
+              {dataSaver ? <ToggleRight size={24} className="text-amber-600" /> : <ToggleLeft size={24} />}
+            </button>
+          )}
 
           <button 
-            onClick={() => navigate('login')}
-            className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full transition-colors ${isDark ? 'text-gray-400 active:bg-gray-800' : 'text-gray-600 active:bg-gray-100'} ${currentPage === 'login' ? 'text-amber-600 bg-amber-50' : ''}`} 
-            aria-label="Connexion"
+            onClick={() => navigate(user ? 'home' : 'login', undefined, true)}
+            className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full transition-colors ${isDark ? 'text-gray-400 active:bg-gray-800' : 'text-gray-600 active:bg-gray-100'} ${currentPage === 'login' || currentPage === 'home' || currentPage === 'dashboard' ? 'text-amber-600 bg-amber-50' : ''}`} 
+            aria-label={user ? t('header.dashboard') : t('header.login')}
           >
             <User size={22} />
           </button>
 
           <button 
-            onClick={() => navigate('catalog')}
+            onClick={() => navigate('catalog', undefined, true)}
             className={`min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full transition-colors ${isDark ? 'text-gray-400 active:bg-gray-800' : 'text-gray-600 active:bg-gray-100'} ${currentPage === 'catalog' ? 'text-amber-600 bg-amber-50' : ''}`} 
-            aria-label="Boutique"
+            aria-label={t('header.shop')}
           >
             <Store size={22} />
           </button>
 
           <button 
-            onClick={() => navigate('cart')}
+            onClick={() => navigate('cart', undefined, true)}
             className={`relative min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full transition-colors ${isDark ? 'text-gray-400 active:bg-gray-800' : 'text-gray-600 active:bg-gray-100'} ${currentPage === 'cart' ? 'text-amber-600 bg-amber-50' : ''}`} 
-            aria-label="Panier"
+            aria-label={t('header.cart')}
           >
             <ShoppingCart size={22} />
             {cartCount > 0 && (

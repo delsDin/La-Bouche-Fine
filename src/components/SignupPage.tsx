@@ -5,7 +5,7 @@ import { trackEvent } from '../lib/tracking';
 import logo from '../data/boucheFine.png';
 
 export const SignupPage = () => {
-  const { navigate, networkStatus, theme } = useAppContext();
+  const { navigate, goBack, networkStatus, theme, t } = useAppContext();
   const isDark = theme === 'dark';
   
   // Form state
@@ -119,8 +119,8 @@ export const SignupPage = () => {
       localStorage.removeItem('signup_terms');
       localStorage.removeItem('signup_tracking');
       
-      // Navigate to dashboard
-      navigate('dashboard');
+      // Navigate to home
+      navigate('home');
       
     } catch (err) {
       setError('Une erreur est survenue. Veuillez réessayer.');
@@ -135,7 +135,7 @@ export const SignupPage = () => {
       {/* Zone 1: Header Minimaliste */}
       <header className={`sticky top-0 z-30 px-4 py-3 flex items-center border-b transition-colors duration-300 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
         <button 
-          onClick={() => navigate('home')}
+          onClick={() => goBack()}
           className={`p-2 -ml-2 rounded-full transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-600 hover:bg-gray-100'}`}
           aria-label="Retour"
         >
@@ -155,9 +155,9 @@ export const SignupPage = () => {
         {/* Zone 2: Proposition de Valeur */}
         <div className="mb-8 text-center">
           <p className="text-amber-600 font-medium text-sm mb-2">Akwaba / Kuabo ! 👋</p>
-          <h1 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Créez votre compte gratuit</h1>
+          <h1 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('signup.title')}</h1>
           <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Accédez aux cours, suivez vos commandes et recevez nos offres sur WhatsApp.
+            {t('signup.subtitle')}
           </p>
         </div>
 
@@ -167,7 +167,7 @@ export const SignupPage = () => {
             {/* Phone */}
             <div>
               <label className={`block text-sm font-semibold mb-1.5 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                Numéro Mobile (WhatsApp)
+                {t('login.phone')}
               </label>
               <div className="flex items-center">
                 <div className={`border border-r-0 rounded-l-xl px-3 py-3.5 font-bold transition-colors duration-300 ${isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-100 border-gray-200 text-gray-600'}`}>
@@ -192,7 +192,7 @@ export const SignupPage = () => {
             {/* Password */}
             <div>
               <label className={`block text-sm font-semibold mb-1.5 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                Mot de passe
+                {t('login.password')}
               </label>
               <div className="relative">
                 <input
@@ -217,7 +217,7 @@ export const SignupPage = () => {
             {/* Confirm Password */}
             <div>
               <label className={`block text-sm font-semibold mb-1.5 ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                Confirmer le mot de passe
+                {t('signup.confirm_password')}
               </label>
               <div className="relative">
                 <input
@@ -298,7 +298,7 @@ export const SignupPage = () => {
               ) : networkStatus === 'offline' && error ? (
                 "Réessayer"
               ) : (
-                "S'inscrire Gratuitement"
+                t('signup.submit')
               )}
             </button>
 
@@ -321,7 +321,7 @@ export const SignupPage = () => {
         {/* Zone 6: Footer */}
         <footer className="mt-8 text-center">
           <button onClick={() => navigate('login')} className={`text-sm font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-amber-500' : 'text-gray-600 hover:text-amber-600'}`}>
-            Déjà un compte ? <span className="text-amber-600 underline">Se connecter</span>
+            {t('signup.already_account')} <span className="text-amber-600 underline">{t('login.submit')}</span>
           </button>
           <p className="text-xs text-gray-400 mt-6">
             © {new Date().getFullYear()} La Bouche Fine. Tous droits réservés.
